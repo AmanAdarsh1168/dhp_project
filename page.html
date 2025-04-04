@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 10 Tags Percentage Over Years</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        canvas {
+            width: 80vw !important;
+            height: 80vh !important;
+            max-width: none;
+            max-height: none;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h2>Top 10 Tags as Percentage Over Years</h2>
+    <canvas id="myChart"></canvas>
+
+    <script>
+        async function fetchData() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/data');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+        async function renderChart() {
+            const apiData = await fetchData();
+            if (!apiData) return;
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+
+            const colors = [
+                'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 
+                'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 
+                'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 
+                'rgba(199, 199, 199, 1)', 'rgba(83, 102, 255, 1)', 
+                'rgba(40, 159, 64, 1)', 'rgba(200, 99, 132, 1)'
+            ];
+
+            const labels = new Set(); // Store unique year values
+            const datasets = [];
+
+            let colorIndex = 0;
+            for (const [tag, details] of Object.entries(apiData)) {
+                details.years.forEach(year => labels.add(year));
+
+                datasets.push({
+                    label: tag,
+                    data: details.percentages,
+                    borderColor: colors[colorIndex % colors.length],
+                    backgroundColor: colors[colorIndex % colors.length].replace('1)', '0.2)'),
+                    borderWidth: 2,
+                    fill: false
+                });
+
+                colorIndex++;
+            }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from(labels).sort(),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'Years' } },
+                        y: { title: { display: true, text: 'Percentage (%)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        renderChart();
+    </script>
+</body>
+</html>
